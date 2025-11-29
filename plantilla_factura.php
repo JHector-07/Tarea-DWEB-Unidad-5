@@ -1,0 +1,2 @@
+<?php
+// parte de Hector
