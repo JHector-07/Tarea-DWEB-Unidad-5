@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Factura / CCF</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        color: #333;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+    }
+
+    .subtitulo {
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        background-color: #eee;
+        padding: 6px;
+        font-weight: bold;
+        border: 1px solid #ccc;
+        margin-top: 25px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        font-size: 14px;
+    }
+
+    table td, table th {
+        border: 1px solid #666;
+        padding: 6px;
+    }
+
+    table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .totales td {
+        font-weight: bold;
+        background: #fafafa;
+    }
+
+    .right {
+        text-align: right;
+    }
+</style>
+</head>
+
+<body>
+
+<!-- TIPO DE DOCUMENTO -->
+<h2>FACTURA</h2>
+<div class="subtitulo">Documento N°: 000123</div>
+<div class="subtitulo">Fecha: 2025-11-28</div>
+
+<!-- DATOS DEL EMISOR -->
+<div class="section-title">Datos del Emisor</div>
+
+<table>
+    <tr>
+        <td><strong>Razón Social:</strong></td>
+        <td>Empresa Ejemplo S.A. de C.V.</td>
+    </tr>
+    <tr>
+        <td><strong>NIT:</strong></td>
+        <td>0614-251234-102-5</td>
+    </tr>
+    <tr>
+        <td><strong>NRC:</strong></td>
+        <td>123456-7</td>
+    </tr>
+    <tr>
+        <td><strong>Actividad Económica:</strong></td>
+        <td>Servicios Informáticos</td>
+    </tr>
+    <tr>
+        <td><strong>Dirección:</strong></td>
+        <td>San Salvador, El Salvador</td>
+    </tr>
+    <tr>
+        <td><strong>Teléfono:</strong></td>
+        <td>7777-7777</td>
+    </tr>
+    <tr>
+        <td><strong>Correo:</strong></td>
+        <td>empresa@example.com</td>
+    </tr>
+</table>
+
+<!-- DATOS DEL CLIENTE -->
+<div class="section-title">Datos del Cliente</div>
+
+<table>
+    <tr>
+        <td><strong>Nombre:</strong></td>
+        <td>Juan Pérez</td>
+    </tr>
+    <tr>
+        <td><strong>Documento:</strong></td>
+        <td>12345678-9</td>
+    </tr>
+    <tr>
+        <td><strong>Dirección:</strong></td>
+        <td>San Miguel, El Salvador</td>
+    </tr>
+    <tr>
+        <td><strong>Teléfono:</strong></td>
+        <td>7000-0000</td>
+    </tr>
+    <tr>
+        <td><strong>Correo:</strong></td>
+        <td>cliente@gmail.com</td>
+    </tr>
+</table>
+
+<!-- DETALLE -->
+<div class="section-title">Detalle de Ítems</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>N°</th>
+            <th>Cantidad</th>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>No Sujeta</th>
+            <th>Exenta</th>
+            <th>Gravada</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>2</td>
+            <td>A001</td>
+            <td>Producto de ejemplo</td>
+            <td>$0.00</td>
+            <td>$0.00</td>
+            <td>$25.00</td>
+        </tr>
+
+        <tr>
+            <td>2</td>
+            <td>1</td>
+            <td>B100</td>
+            <td>Servicio técnico</td>
+            <td>$0.00</td>
+            <td>$0.00</td>
+            <td>$15.00</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- TOTALES -->
+<div class="section-title">Totales</div>
+
+<table class="totales">
+    <tr>
+        <td>Total No Sujetas:</td>
+        <td class="right">$0.00</td>
+    </tr>
+    <tr>
+        <td>Total Exentas:</td>
+        <td class="right">$0.00</td>
+    </tr>
+    <tr>
+        <td>Total Gravadas:</td>
+        <td class="right">$40.00</td>
+    </tr>
+    <tr>
+        <td>IVA (13%):</td>
+        <td class="right">$5.20</td>
+    </tr>
+    <tr>
+        <td>IVA Retenido:</td>
+        <td class="right">$0.00</td>
+    </tr>
+    <tr>
+        <td><strong>Total General:</strong></td>
+        <td class="right"><strong>$45.20</strong></td>
+    </tr>
+</table>
+
+</body>
+</html>
