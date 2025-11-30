@@ -1,14 +1,16 @@
 <?php
-// parte de Hector
-require_once __DIR__ . '/dompdf/autoload.inc.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
-// Importación de clases Dompdf 
+
 use Dompdf\Dompdf;
-use Dompdf\Options;
 
 function generarPDF($datos)
 {
     ob_start();
+
+    // Valores predeterminados por si no vienen
+    $numero_documento = $datos['numero_documento'] ?? '00000001';
+    $fecha = $datos['fecha'] ?? date('d/m/Y');
 ?>
 
 <!DOCTYPE html>
@@ -16,77 +18,26 @@ function generarPDF($datos)
 <head>
 <meta charset="UTF-8">
 <title>Factura / CCF</title>
-
 <style>
-    body {
-        font-family: DejaVu Sans, Arial, sans-serif;
-        margin: 40px;
-        color: #333;
-        font-size: 12px;
-    }
-
-    h2 {
-        text-align: center;
-        margin-bottom: 5px;
-        text-transform: uppercase;
-    }
-
-    .subtitulo {
-        text-align: center;
-        font-size: 12px;
-        margin-bottom: 15px;
-    }
-
-    .section-title {
-        background-color: #eee;
-        padding: 6px;
-        font-weight: bold;
-        border: 1px solid #ccc;
-        margin-top: 25px;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 8px;
-        font-size: 12px;
-    }
-
-    table td, table th {
-        border: 1px solid #666;
-        padding: 6px;
-    }
-
-    table th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-        text-align: center;
-    }
-
-    .totales td {
-        font-weight: bold;
-        background: #fafafa;
-    }
-
-    .right {
-        text-align: right;
-    }
+    body { font-family: DejaVu Sans, Arial, sans-serif; margin: 40px; color: #333; font-size: 12px; }
+    h2 { text-align: center; margin-bottom: 5px; text-transform: uppercase; }
+    .subtitulo { text-align: center; font-size: 12px; margin-bottom: 15px; }
+    .section-title { background-color: #eee; padding: 6px; font-weight: bold; border: 1px solid #ccc; margin-top: 25px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+    table td, table th { border: 1px solid #666; padding: 6px; }
+    table th { background-color: #f2f2f2; font-weight: bold; text-align: center; }
+    .totales td { font-weight: bold; background: #fafafa; }
+    .right { text-align: right; }
 </style>
 </head>
-
 <body>
 
-<!-- TIPO DE DOCUMENTO -->
-<h2>
-    <?= $datos['tipo_documento'] === '01' ? 'FACTURA' : 'COMPROBANTE DE CRÉDITO FISCAL' ?>
-</h2>
+<h2><?= $datos['tipo_documento'] === '01' ? 'FACTURA' : 'COMPROBANTE DE CRÉDITO FISCAL' ?></h2>
+<div class="subtitulo">Documento N°: <?= $numero_documento ?></div>
+<div class="subtitulo">Fecha: <?= $fecha ?></div>
 
-<div class="subtitulo">Documento N°: <?= $datos['numero_documento'] ?></div>
-<div class="subtitulo">Fecha: <?= $datos['fecha'] ?></div>
-
-<!-- DATOS DEL EMISOR -->
+<!-- Emisor -->
 <div class="section-title">Datos del Emisor</div>
-
 <table>
     <tr><td><strong>Razón Social:</strong></td><td><?= $datos['emisor']['nombre_emisor'] ?></td></tr>
     <tr><td><strong>NIT:</strong></td><td><?= $datos['emisor']['nit_emisor'] ?></td></tr>
@@ -97,9 +48,8 @@ function generarPDF($datos)
     <tr><td><strong>Correo:</strong></td><td><?= $datos['emisor']['correo_emisor'] ?></td></tr>
 </table>
 
-<!-- DATOS DEL CLIENTE -->
+<!-- Cliente -->
 <div class="section-title">Datos del Cliente</div>
-
 <table>
     <tr><td><strong>Nombre / Razón Social:</strong></td><td><?= $datos['cliente']['nombre_cliente'] ?></td></tr>
     <tr><td><strong>Documento:</strong></td><td><?= $datos['cliente']['documento_cliente'] ?></td></tr>
@@ -108,9 +58,8 @@ function generarPDF($datos)
     <tr><td><strong>Correo:</strong></td><td><?= $datos['cliente']['correo_cliente'] ?></td></tr>
 </table>
 
-<!-- DETALLE -->
+<!-- Items -->
 <div class="section-title">Detalle de Ítems</div>
-
 <table>
     <thead>
         <tr>
@@ -123,7 +72,6 @@ function generarPDF($datos)
             <th>Gravada</th>
         </tr>
     </thead>
-
     <tbody>
         <?php foreach ($datos['items'] as $item): ?>
             <tr>
@@ -139,9 +87,8 @@ function generarPDF($datos)
     </tbody>
 </table>
 
-<!-- TOTALES -->
+<!-- Totales -->
 <div class="section-title">Totales</div>
-
 <table class="totales">
     <tr><td>Total No Sujetas:</td><td class="right">$<?= number_format($datos['calculos']['suma_no_sujeta'], 2) ?></td></tr>
     <tr><td>Total Exentas:</td><td class="right">$<?= number_format($datos['calculos']['suma_exenta'], 2) ?></td></tr>
@@ -155,14 +102,11 @@ function generarPDF($datos)
 </html>
 
 <?php
-   
     $html = ob_get_clean();
     $dompdf = new Dompdf();
     $dompdf->loadHtml($html);
     $dompdf->setPaper('A4', 'portrait');
     $dompdf->render();
     $dompdf->stream("factura.pdf", ["Attachment" => false]);
-    
 }
-
 ?>

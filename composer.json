@@ -1,4 +1,6 @@
 {
     "name": "proyecto/dweb",
-    "require": {}
+    "require": {
+        "dompdf/dompdf": "^3.1"
+    }
 }
