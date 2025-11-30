@@ -1,17 +1,23 @@
-<?php
+<?php 
+/**
+ * formulario_factura.php
+ * 
+ * Formulario principal para emitir Facturas (01) o Comprobantes de Crédito Fiscal (03).
+ * Incluye validación de campos, manejo dinámico de ítems y visualización de errores.
+ */
+
 session_start();
 
-// Recuperar errores y datos previos de la sesión
+// Recuperar errores y datos previos
 $errores = $_SESSION['errores'] ?? [];
 $datos = $_SESSION['datos'] ?? [];
 unset($_SESSION['errores'], $_SESSION['datos']);
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Factura de Crédito Fiscal</title>
+<title>Factura / CCF</title>
 <style>
     body { background:#1a1a1a; color:white; font-family:Arial; margin:0; padding:20px; }
     .container { width:95%; max-width:1100px; margin:auto; background:#252525; padding:20px; border-radius:10px; }
@@ -28,14 +34,76 @@ unset($_SESSION['errores'], $_SESSION['datos']);
     .btn-eliminar { background:#cc0000; padding:5px 10px; }
     .error-list { background:#ff4d4d; color:white; padding:10px; border-radius:5px; margin-bottom:15px; }
 </style>
+
+<script>
+/**
+ * Muestra/oculta los campos adicionales para CCF según tipo de documento seleccionado
+ */
+function toggleDatosCCF() {
+    let tipo = document.querySelector("select[name='tipo_documento']").value;
+    let bloque = document.getElementById("datos_ccf");
+
+    if (tipo === "03") {
+        bloque.style.display = "block";
+    } else {
+        bloque.style.display = "none";
+
+        // Limpiar campos si se cambia a factura
+        document.getElementById("nrc_cliente").value = "";
+        document.getElementById("giro_cliente").value = "";
+        document.getElementById("actividad_cliente").value = "";
+    }
+}
+
+/**
+ * Valida que un campo tenga solo números
+ */
+function soloNumeros(input) {
+    input.value = input.value.replace(/[^0-9.-]/g, '');
+}
+
+/**
+ * Agrega una nueva fila de ítem a la tabla dinámicamente
+ */
+function agregarItem() {
+    let tabla = document.getElementById("tablaItems").querySelector("tbody");
+    let filaCount = tabla.rows.length + 1;
+
+    let fila = `
+        <tr>
+            <td>${filaCount}</td>
+            <td><input type="number" name="items[${filaCount}][cantidad]" step="0.01" min="0" oninput="soloNumeros(this)"></td>
+            <td><input type="text" name="items[${filaCount}][codigo]"></td>
+            <td><input type="text" name="items[${filaCount}][descripcion]"></td>
+            <td><input type="number" step="0.01" name="items[${filaCount}][precio_unitario]" min="0" oninput="soloNumeros(this)"></td>
+            <td>
+                <select name="items[${filaCount}][categoria]">
+                    <option value="no_sujeta">No Sujeta</option>
+                    <option value="exenta">Exenta</option>
+                    <option value="gravada" selected>Gravada</option>
+                </select>
+            </td>
+            <td><button type="button" class="btn btn-eliminar" onclick="eliminarFila(this)">X</button></td>
+        </tr>`;
+    tabla.insertAdjacentHTML('beforeend', fila);
+}
+
+/**
+ * Elimina una fila de ítem de la tabla
+ */
+function eliminarFila(btn) {
+    btn.parentNode.parentNode.remove();
+}
+</script>
 </head>
-<body>
+
+<body onload="toggleDatosCCF()">
 
 <div class="container">
 
 <form action="procesar.php" method="POST">
 
-    <h2>Factura de Crédito Fiscal</h2>
+    <h2>Factura / Comprobante de Crédito Fiscal</h2>
 
     <?php if (!empty($errores)): ?>
         <div class="error-list">
@@ -48,52 +116,76 @@ unset($_SESSION['errores'], $_SESSION['datos']);
         </div>
     <?php endif; ?>
 
+
+    <!-- TIPO DE DOCUMENTO -->
     <h3>Tipo de Documento</h3>
-    <select name="tipo_documento" required <?= isset($errores['tipo_documento']) ? 'class="error"' : '' ?>>
-        <option value="01" <?= (isset($datos['tipo_documento']) && $datos['tipo_documento']=='01') ? 'selected' : '' ?>>01 - Factura</option>
-        <option value="03" <?= (isset($datos['tipo_documento']) && $datos['tipo_documento']=='03') ? 'selected' : '' ?>>03 - Comprobante de Crédito Fiscal</option>
+    <select name="tipo_documento" required onchange="toggleDatosCCF()">
+        <option value="01" <?= ($datos['tipo_documento'] ?? '')=='01' ? 'selected' : '' ?>>01 - Factura</option>
+        <option value="03" <?= ($datos['tipo_documento'] ?? '')=='03' ? 'selected' : '' ?>>03 - Comprobante de Crédito Fiscal</option>
     </select>
 
+
+    <!-- DATOS DEL EMISOR -->
     <h3>Datos del Emisor</h3>
     <?php
     $campos_emisor = [
-        'nombre_emisor' => 'Nombre / Razón Social',
-        'nit_emisor' => 'NIT',
-        'nrc_emisor' => 'NRC',
-        'actividad_economica' => 'Actividad Económica',
-        'direccion_emisor' => 'Dirección',
-        'telefono_emisor' => 'Teléfono',
-        'correo_emisor' => 'Correo',
-        'nombre_comercial' => 'Nombre Comercial',
-        'establecimiento' => 'Establecimiento'
+        'nombre_emisor'=>'Nombre / Razón Social',
+        'nit_emisor'=>'NIT',
+        'nrc_emisor'=>'NRC',
+        'actividad_economica'=>'Actividad Económica',
+        'direccion_emisor'=>'Dirección',
+        'telefono_emisor'=>'Teléfono',
+        'correo_emisor'=>'Correo',
+        'nombre_comercial'=>'Nombre Comercial',
+        'establecimiento'=>'Establecimiento'
     ];
-    foreach ($campos_emisor as $campo => $label):
+
+    foreach ($campos_emisor as $campo=>$label):
         $valor = $datos[$campo] ?? '';
-        $clase_error = in_array($campo, $errores) ? 'error' : '';
     ?>
         <label><?= $label ?></label>
-        <input type="text" name="<?= $campo ?>" value="<?= htmlspecialchars($valor) ?>" class="<?= $clase_error ?>">
+        <input type="text" name="<?= $campo ?>" value="<?= htmlspecialchars($valor) ?>">
     <?php endforeach; ?>
 
+
+    <!-- DATOS DEL CLIENTE -->
     <h3>Datos del Cliente</h3>
     <?php
     $campos_cliente = [
-        'nombre_cliente' => 'Nombre / Razón Social',
-        'documento_cliente' => 'Documento (NIT o DUI)',
-        'direccion_cliente' => 'Dirección',
-        'telefono_cliente' => 'Teléfono',
-        'correo_cliente' => 'Correo',
-        'nombre_comercial_cliente' => 'Nombre Comercial'
+        'nombre_cliente'=>'Nombre / Razón Social',
+        'documento_cliente'=>'Documento (NIT o DUI)',
+        'direccion_cliente'=>'Dirección',
+        'telefono_cliente'=>'Teléfono',
+        'correo_cliente'=>'Correo',
+        'nombre_comercial_cliente'=>'Nombre Comercial'
     ];
-    foreach ($campos_cliente as $campo => $label):
+
+    foreach ($campos_cliente as $campo=>$label):
         $valor = $datos[$campo] ?? '';
-        $clase_error = in_array($campo, $errores) ? 'error' : '';
     ?>
         <label><?= $label ?></label>
-        <input type="text" name="<?= $campo ?>" value="<?= htmlspecialchars($valor) ?>" class="<?= $clase_error ?>">
+        <input type="text" name="<?= $campo ?>" value="<?= htmlspecialchars($valor) ?>">
     <?php endforeach; ?>
 
-    <h3>Ítems de la Factura</h3>
+
+    <!-- 🔵 CAMPOS ESPECIALES PARA CCF -->
+    <div id="datos_ccf" style="display:none;">
+        <h3>Datos adicionales para CCF</h3>
+
+        <label>NRC del Cliente</label>
+        <input type="text" id="nrc_cliente" name="nrc_cliente" value="<?= $datos['nrc_cliente'] ?? '' ?>">
+
+        <label>Giro del Cliente</label>
+        <input type="text" id="giro_cliente" name="giro_cliente" value="<?= $datos['giro_cliente'] ?? '' ?>">
+
+        <label>Actividad Económica</label>
+        <input type="text" id="actividad_cliente" name="actividad_cliente" value="<?= $datos['actividad_cliente'] ?? '' ?>">
+    </div>
+
+
+    <!-- ITEMS -->
+    <h3>Ítems</h3>
+
     <table id="tablaItems">
         <thead>
             <tr>
@@ -114,63 +206,34 @@ unset($_SESSION['errores'], $_SESSION['datos']);
             ?>
             <tr>
                 <td><?= $contador ?></td>
-                <td><input type="number" name="items[<?= $contador ?>][cantidad]" value="<?= htmlspecialchars($item['cantidad']) ?>"></td>
-                <td><input type="text" name="items[<?= $contador ?>][codigo]" value="<?= htmlspecialchars($item['codigo']) ?>"></td>
-                <td><input type="text" name="items[<?= $contador ?>][descripcion]" value="<?= htmlspecialchars($item['descripcion']) ?>"></td>
-                <td><input type="number" name="items[<?= $contador ?>][precio_unitario]" step="0.01" value="<?= htmlspecialchars($item['precio_unitario']) ?>"></td>
+                <td><input type="number" name="items[<?= $contador ?>][cantidad]" step="0.01" min="0" value="<?= $item['cantidad'] ?>" oninput="soloNumeros(this)"></td>
+                <td><input type="text" name="items[<?= $contador ?>][codigo]" value="<?= $item['codigo'] ?>"></td>
+                <td><input type="text" name="items[<?= $contador ?>][descripcion]" value="<?= $item['descripcion'] ?>"></td>
+                <td><input type="number" name="items[<?= $contador ?>][precio_unitario]" step="0.01" min="0" value="<?= $item['precio_unitario'] ?>" oninput="soloNumeros(this)"></td>
                 <td>
                     <select name="items[<?= $contador ?>][categoria]">
-                        <option value="no_sujeta" <?= ($item['categoria']=='no_sujeta')?'selected':'' ?>>No Sujeta</option>
-                        <option value="exenta" <?= ($item['categoria']=='exenta')?'selected':'' ?>>Exenta</option>
-                        <option value="gravada" <?= ($item['categoria']=='gravada')?'selected':'' ?>>Gravada</option>
+                        <option value="no_sujeta" <?= $item['categoria']=='no_sujeta'?'selected':'' ?>>No Sujeta</option>
+                        <option value="exenta" <?= $item['categoria']=='exenta'?'selected':'' ?>>Exenta</option>
+                        <option value="gravada" <?= $item['categoria']=='gravada'?'selected':'' ?>>Gravada</option>
                     </select>
                 </td>
                 <td><button type="button" class="btn btn-eliminar" onclick="eliminarFila(this)">X</button></td>
             </tr>
             <?php
-                    $contador++;
+                $contador++;
                 endforeach;
             endif;
             ?>
         </tbody>
     </table>
 
-    <button type="button" class="btn" onclick="agregarFila()">Agregar Ítem</button>
-    <button type="submit" class="btn" style="background:green;">Generar PDF</button>
+    <button type="button" class="btn" onclick="agregarItem()">Agregar Ítem</button>
+
+    <br><br>
+    <button type="submit" class="btn">Generar PDF</button>
 
 </form>
 </div>
-
-<script>
-let contador = <?= $contador ?>;
-
-function agregarFila() {
-    const tabla = document.querySelector("#tablaItems tbody");
-    const fila = document.createElement("tr");
-
-    fila.innerHTML = `
-        <td>${contador}</td>
-        <td><input type="number" name="items[${contador}][cantidad]" class="cantidad" min="1" value="1"></td>
-        <td><input type="text" name="items[${contador}][codigo]" class="codigo"></td>
-        <td><input type="text" name="items[${contador}][descripcion]" class="descripcion"></td>
-        <td><input type="number" name="items[${contador}][precio_unitario]" class="precio" step="0.01" min="0" value="0"></td>
-        <td>
-            <select name="items[${contador}][categoria]">
-                <option value="no_sujeta">No Sujeta</option>
-                <option value="exenta">Exenta</option>
-                <option value="gravada">Gravada</option>
-            </select>
-        </td>
-        <td><button type="button" class="btn btn-eliminar" onclick="eliminarFila(this)">X</button></td>
-    `;
-    tabla.appendChild(fila);
-    contador++;
-}
-
-function eliminarFila(boton) {
-    boton.closest('tr').remove();
-}
-</script>
 
 </body>
 </html>

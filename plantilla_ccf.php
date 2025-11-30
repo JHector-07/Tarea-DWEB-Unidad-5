@@ -2,7 +2,7 @@
 require_once __DIR__ . '/vendor/autoload.php';
 use Dompdf\Dompdf;
 
-function generarPDF($datos)
+function generarPDF_CCF($datos)
 {
     ob_start();
 
@@ -13,14 +13,13 @@ function generarPDF($datos)
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Factura</title>
+<title>CCF</title>
 
 <style>
     body {
         font-family: DejaVu Sans, Arial;
         font-size: 11px;
         margin: 20px;
-        color: #333;
     }
 
     .container {
@@ -31,35 +30,28 @@ function generarPDF($datos)
     /* ENCABEZADO */
     .header {
         text-align: center;
+        border-bottom: 2px solid #c0392b;
         padding-bottom: 10px;
-        border-bottom: 2px solid #2c3e50;
         margin-bottom: 20px;
     }
+
     .header h1 {
+        color: #c0392b;
         font-size: 26px;
-        color: #2c3e50;
         font-weight: bold;
-        margin-bottom: 5px;
-    }
-    .subtitulo {
-        font-size: 12px;
-        color: #555;
-        margin-top: 2px;
     }
 
-    /* TITULOS */
+    /* SECCIONES */
     .section-title {
         margin-top: 18px;
-        background: #2c3e50;
-        color: #fff;
-        padding: 7px;
-        font-weight: bold;
+        background: #c0392b;
+        color: white;
+        padding: 8px;
         font-size: 12px;
         text-align: center;
         border-radius: 3px;
     }
 
-    /* TABLAS --------------------- */
     table {
         width: 100%;
         border-collapse: collapse;
@@ -72,8 +64,8 @@ function generarPDF($datos)
     }
     .data-table td:first-child {
         background: #f4f4f4;
-        width: 28%;
         font-weight: bold;
+        width: 28%;
     }
 
     /* ITEMS */
@@ -82,20 +74,13 @@ function generarPDF($datos)
         color: #fff;
         padding: 8px;
         border: 1px solid #34495e;
-        font-size: 11px;
     }
     .items-table td {
         padding: 7px;
         border: 1px solid #ccc;
-        font-size: 11px;
-    }
-    .descripcion { text-align: left; }
-
-    .cantidad, .precio, .total {
-        text-align: right;
     }
 
-    /* TOTALES ---------------------------- */
+    /* TOTALES */
     .totales-container {
         width: 100%;
         display: flex;
@@ -109,40 +94,40 @@ function generarPDF($datos)
     }
 
     .totales td {
-        padding: 10px;
         border: 1px solid #bbb;
+        padding: 10px;
     }
 
     .label {
         background: #f4f4f4;
-        font-weight: bold;
         text-align: right;
+        font-weight: bold;
     }
 
     .total-general {
-        background: #27ae60;
+        background: #c0392b;
         color: #fff;
         font-weight: bold;
     }
 </style>
 </head>
+
 <body>
 
 <div class="container">
 
     <div class="header">
-        <h1>FACTURA</h1>
-        <div class="subtitulo">Documento N°: <?= $numero_documento ?></div>
-        <div class="subtitulo">Fecha: <?= $fecha ?></div>
+        <h1>COMPROBANTE DE CRÉDITO FISCAL</h1>
+        <div>N° <?= $numero_documento ?> — Fecha: <?= $fecha ?></div>
     </div>
 
     <!-- EMISOR -->
     <div class="section-title">Datos del Emisor</div>
     <table class="data-table">
-        <?php foreach ($datos['emisor'] as $key => $value): ?>
+        <?php foreach ($datos['emisor'] as $k => $v): ?>
         <tr>
-            <td><?= ucfirst(str_replace("_", " ", $key)) ?>:</td>
-            <td><?= htmlspecialchars($value) ?></td>
+            <td><?= ucfirst(str_replace("_"," ",$k)) ?>:</td>
+            <td><?= htmlspecialchars($v) ?></td>
         </tr>
         <?php endforeach; ?>
     </table>
@@ -150,10 +135,10 @@ function generarPDF($datos)
     <!-- CLIENTE -->
     <div class="section-title">Datos del Cliente</div>
     <table class="data-table">
-        <?php foreach ($datos['cliente'] as $key => $value): ?>
+        <?php foreach ($datos['cliente'] as $k => $v): ?>
         <tr>
-            <td><?= ucfirst(str_replace("_", " ", $key)) ?>:</td>
-            <td><?= htmlspecialchars($value) ?></td>
+            <td><?= ucfirst(str_replace("_"," ",$k)) ?>:</td>
+            <td><?= htmlspecialchars($v) ?></td>
         </tr>
         <?php endforeach; ?>
     </table>
@@ -170,26 +155,27 @@ function generarPDF($datos)
         <?php foreach ($datos['items'] as $i): ?>
         <tr>
             <td><?= $i['numero'] ?></td>
-            <td class="cantidad"><?= number_format($i['cantidad'], 2) ?></td>
+            <td><?= number_format($i['cantidad'], 2) ?></td>
             <td><?= $i['codigo'] ?></td>
-            <td class="descripcion"><?= $i['descripcion'] ?></td>
-            <td class="precio">$<?= number_format($i['precio_unitario'], 2) ?></td>
-            <td class="total">$<?= number_format($i['venta_no_sujeta'], 2) ?></td>
-            <td class="total">$<?= number_format($i['venta_exenta'], 2) ?></td>
-            <td class="total">$<?= number_format($i['venta_gravada'], 2) ?></td>
+            <td><?= $i['descripcion'] ?></td>
+            <td>$<?= number_format($i['precio_unitario'], 2) ?></td>
+            <td>$<?= number_format($i['venta_no_sujeta'], 2) ?></td>
+            <td>$<?= number_format($i['venta_exenta'], 2) ?></td>
+            <td>$<?= number_format($i['venta_gravada'], 2) ?></td>
         </tr>
         <?php endforeach; ?>
     </table>
 
     <!-- TOTALES -->
     <div class="section-title">Resumen de Totales</div>
+
     <div class="totales-container">
         <table class="totales">
-            <?php foreach ($datos['calculos'] as $key => $value): ?>
+            <?php foreach ($datos['calculos'] as $k => $v): ?>
             <tr>
-                <td class="label"><?= ucfirst(str_replace("_", " ", $key)) ?>:</td>
-                <td class="<?= $key == 'total_general' ? 'total-general' : '' ?>">
-                    $<?= number_format($value, 2) ?>
+                <td class="label"><?= ucfirst(str_replace("_"," ",$k)) ?>:</td>
+                <td class="<?= $k == 'total_general' ? 'total-general': '' ?>">
+                    $<?= number_format($v, 2) ?>
                 </td>
             </tr>
             <?php endforeach; ?>
@@ -205,8 +191,8 @@ function generarPDF($datos)
     $html = ob_get_clean();
     $dompdf = new Dompdf();
     $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->setPaper('A4','portrait');
     $dompdf->render();
-    $dompdf->stream("factura.pdf", ["Attachment" => false]);
+    $dompdf->stream("ccf.pdf", ["Attachment"=>false]);
 }
 ?>
