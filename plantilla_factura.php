@@ -150,12 +150,29 @@ function generarPDF($datos)
     <!-- CLIENTE -->
     <div class="section-title">Datos del Cliente</div>
     <table class="data-table">
-        <?php foreach ($datos['cliente'] as $key => $value): ?>
+        <?php 
+        // Definir campos según tipo de documento
+        $tipo_doc = $datos['tipo_documento'] ?? '01';
+        
+        if ($tipo_doc === '01') {
+            // FACTURA - Solo campos básicos
+            $campos_mostrar = ['nombre_cliente', 'documento_cliente', 'direccion_cliente', 'telefono_cliente', 'correo_cliente'];
+        } else {
+            // CCF - Todos los campos
+            $campos_mostrar = array_keys($datos['cliente']);
+        }
+        
+        foreach ($campos_mostrar as $key):
+            if (isset($datos['cliente'][$key])):
+        ?>
         <tr>
             <td><?= ucfirst(str_replace("_", " ", $key)) ?>:</td>
-            <td><?= htmlspecialchars($value) ?></td>
+            <td><?= htmlspecialchars($datos['cliente'][$key]) ?></td>
         </tr>
-        <?php endforeach; ?>
+        <?php 
+            endif;
+        endforeach; 
+        ?>
     </table>
 
     <!-- ITEMS -->
